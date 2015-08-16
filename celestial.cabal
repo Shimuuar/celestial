@@ -1,0 +1,29 @@
+Name:           celestial
+Version:        0.1
+Synopsis:       Library for building planetaruims
+Description:
+  Library for building planetaruims
+
+Cabal-Version:  >= 1.10
+License:        BSD3
+License-File:   LICENSE
+Author:         Aleksey Khudyakov <alexey.skladnoy@gmail.com>
+Maintainer:     Aleksey Khudyakov <alexey.skladnoy@gmail.com>
+Homepage:       http://github.com/Shimuuar/celestial
+Category:       Data
+Build-Type:     Simple
+
+source-repository head
+  type:     hg
+  location: http://bitbucket.org/Shimuuar/celestial
+
+
+Library
+  Ghc-options:          -Wall
+  Default-Language:    Haskell2010
+  Build-Depends:
+    base         >=3 && <5,
+    fixed-vector >=0.8
+  Exposed-modules:
+    Celestial.Projection
+    Celestial.Coordinates
