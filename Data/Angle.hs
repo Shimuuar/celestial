@@ -1,0 +1,51 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+-- |
+-- Type-safe angles
+module Data.Angle where
+
+-- | Type safe wrapper for angle
+newtype Angle t a = Angle a
+                    deriving (Show,Eq,Ord)
+
+convertAngle
+  :: forall a t1 t2. (Floating a, AngularUnit t1, AngularUnit t2)
+  => Angle t1 a -> Angle t2 a 
+convertAngle (Angle a) = Angle $
+  a * angularUnit ([]::[t2]) / angularUnit ([]::[t1])
+
+asRadians
+  :: forall a t. (Floating a, AngularUnit t)
+  => Angle t a -> a
+asRadians a =
+  case convertAngle a :: Angle Radians a of
+    Angle x -> x
+
+sin' :: (Floating a, AngularUnit t) => Angle t a -> a
+sin' = sin . asRadians
+
+cos' :: (Floating a, AngularUnit t) => Angle t a -> a
+cos' = cos . asRadians
+
+tan' :: (Floating a, AngularUnit t) => Angle t a -> a
+tan' = tan . asRadians
+
+data Radians
+data Degrees
+data Minutes
+data Seconds
+data HourRA
+data MinuteRA
+data SecondRA
+
+-- | Type class for type-safe angles
+class AngularUnit t where
+  -- | Value of 1rad in given units
+  angularUnit :: Floating a => p t -> a
+
+instance AngularUnit Radians  where angularUnit _ = 1
+instance AngularUnit Degrees  where angularUnit _ = 180 / pi 
+instance AngularUnit Minutes  where angularUnit _ = 60 * 180 / pi
+instance AngularUnit Seconds  where angularUnit _ = 60 * 60 * 180 / pi
+instance AngularUnit HourRA   where angularUnit _ = 12 / pi
+instance AngularUnit MinuteRA where angularUnit _ = 60 * 12 / pi
+instance AngularUnit SecondRA where angularUnit _ = 60 * 60 * 12 / pi

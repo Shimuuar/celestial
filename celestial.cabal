@@ -25,5 +25,6 @@ Library
     base         >=3 && <5,
     fixed-vector >=0.8
   Exposed-modules:
+    Data.Angle
     Celestial.Projection
     Celestial.Coordinates
