@@ -18,9 +18,15 @@ import Data.Quaternion (Quaternion)
 --   allows cheap conversion between different coordinate systems.
 newtype Spherical c a = Spherical (Vec3 a)
 
+-- | Convert from spherical coordinates (coordinates are 
+fromSperical :: 
+
 -- | Projection of celestial coordinates to 2D plane
 newtype ProjCoord a = ProjCoord (Vec2 a)
 
+-- | Great circle on celestial sphere. It's specified by axis of
+--   rotation
+newtype GreatCircle c a = Spherical (Spherical c a)
 
 
 ----------------------------------------------------------------
