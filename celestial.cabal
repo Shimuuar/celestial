@@ -23,6 +23,7 @@ Library
   Default-Language:    Haskell2010
   Build-Depends:
     base         >=3 && <5,
+    my-vectorspace,
     fixed-vector >=0.8
   Exposed-modules:
     Data.Angle

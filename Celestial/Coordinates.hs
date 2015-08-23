@@ -1,10 +1,12 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies     #-}
 -- |
 -- Coordinates for celestial sphere
 module Celestial.Coordinates where
 
+import Data.Angle
 import qualified Data.Vector.Fixed as F
-import           Data.Vector.Fixed.Unboxed (Vec2,Vec3)
+import           Data.Vector.Fixed.Unboxed (Vec2,Vec3,Vec,Unbox)
 import Data.Quaternion (Quaternion)
 
 
@@ -19,14 +21,21 @@ import Data.Quaternion (Quaternion)
 newtype Spherical c a = Spherical (Vec3 a)
 
 -- | Convert from spherical coordinates (coordinates are 
-fromSperical :: 
+fromSperical
+  :: (AngularUnit α, AngularUnit δ, Floating a, Unbox F.N3 a)
+  => Angle α a -> Angle δ a -> Spherical c a
+fromSperical α δ = Spherical $
+  F.mk3 (f * cos' α) (f * sin' α) z
+  where
+    z = sin' δ
+    f = cos' δ
 
 -- | Projection of celestial coordinates to 2D plane
 newtype ProjCoord a = ProjCoord (Vec2 a)
 
 -- | Great circle on celestial sphere. It's specified by axis of
 --   rotation
-newtype GreatCircle c a = Spherical (Spherical c a)
+newtype GreatCircle c a = GreatCircle (Spherical c a)
 
 
 ----------------------------------------------------------------
