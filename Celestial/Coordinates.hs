@@ -1,3 +1,8 @@
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies     #-}
 -- |
@@ -20,6 +25,7 @@ import Data.Quaternion (Quaternion)
 --   allows cheap conversion between different coordinate systems.
 newtype Spherical c a = Spherical (Vec3 a)
 
+
 -- | Convert from spherical coordinates (coordinates are 
 fromSperical
   :: (AngularUnit α, AngularUnit δ, Floating a, Unbox F.N3 a)
@@ -32,6 +38,12 @@ fromSperical α δ = Spherical $
 
 -- | Projection of celestial coordinates to 2D plane
 newtype ProjCoord a = ProjCoord (Vec2 a)
+
+type instance F.Dim ProjCoord = F.N2
+instance Unbox F.N2 a => F.Vector ProjCoord a where
+  inspect  (ProjCoord v) = F.inspect v
+  construct = ProjCoord `fmap` F.construct
+
 
 -- | Great circle on celestial sphere. It's specified by axis of
 --   rotation
@@ -47,3 +59,7 @@ data HorizonalCoord
 
 -- | Equatorial coordinate system. It's parametrized by epoch
 data EquatorialCoord epoch
+
+data J1900
+data J1950
+data J2000
