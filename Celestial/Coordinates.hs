@@ -11,6 +11,7 @@ module Celestial.Coordinates (
     -- * Spherical coordinates
     Spherical(..)
   , fromSperical
+  , CoordTransform(..)
     -- ** Coordinate systems
   , HorizonalCoord
   , EquatorialCoord
@@ -24,9 +25,12 @@ module Celestial.Coordinates (
   ) where
 
 import Data.Angle
+import Control.Category
 import qualified Data.Vector.Fixed as F
-import           Data.Vector.Fixed.Unboxed (Vec2,Vec3,Vec,Unbox)
+import           Data.Vector.Fixed.Unboxed (Vec2,Vec3,Unbox)
 import Data.Quaternion (Quaternion)
+
+import Prelude hiding ((.),id)
 
 
 ----------------------------------------------------------------
@@ -49,6 +53,17 @@ fromSperical α δ = Spherical $
   where
     z = sin' δ
     f = cos' δ
+
+-- | Coordinate transformation from coordinate system @c1@ to
+-- coordinate system @c2@.
+newtype CoordTransform a c1 c2 = CoordTransform
+  { coordTransformRepr :: Quaternion a }
+
+instance (Unbox F.N4 a, Floating a) => Category (CoordTransform a) where
+  id = CoordTransform 1
+  -- FIXME: is composition correct?
+  CoordTransform f . CoordTransform g = CoordTransform (f * g)
+
 
 -- | Great circle on celestial sphere. It's specified by axis of
 --   rotation
