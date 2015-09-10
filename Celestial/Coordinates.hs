@@ -7,7 +7,21 @@
 {-# LANGUAGE TypeFamilies     #-}
 -- |
 -- Coordinates for celestial sphere
-module Celestial.Coordinates where
+module Celestial.Coordinates (
+    -- * Spherical coordinates
+    Spherical(..)
+  , fromSperical
+    -- ** Coordinate systems
+  , HorizonalCoord
+  , EquatorialCoord
+  , J1900
+  , J1950
+  , J2000
+    -- ** Other data types
+  , GreatCircle(..)
+    -- * Projection plane
+  , ProjCoord(..)
+  ) where
 
 import Data.Angle
 import qualified Data.Vector.Fixed as F
@@ -16,7 +30,7 @@ import Data.Quaternion (Quaternion)
 
 
 ----------------------------------------------------------------
--- Coordinates
+-- Spherical coordinates
 ----------------------------------------------------------------
 
 -- | Coordinate on celestial sphere. They're tagged by coordinate
@@ -26,7 +40,7 @@ import Data.Quaternion (Quaternion)
 newtype Spherical c a = Spherical (Vec3 a)
 
 
--- | Convert from spherical coordinates (coordinates are 
+-- | Convert from spherical coordinates to unit vector representation
 fromSperical
   :: (AngularUnit α, AngularUnit δ, Floating a, Unbox F.N3 a)
   => Angle α a -> Angle δ a -> Spherical c a
@@ -35,6 +49,15 @@ fromSperical α δ = Spherical $
   where
     z = sin' δ
     f = cos' δ
+
+-- | Great circle on celestial sphere. It's specified by axis of
+--   rotation
+newtype GreatCircle c a = GreatCircle (Spherical c a)
+
+
+----------------------------------------------------------------
+-- Projection plane
+----------------------------------------------------------------
 
 -- | Projection of celestial coordinates to 2D plane
 newtype ProjCoord a = ProjCoord (Vec2 a)
@@ -45,9 +68,6 @@ instance Unbox F.N2 a => F.Vector ProjCoord a where
   construct = ProjCoord `fmap` F.construct
 
 
--- | Great circle on celestial sphere. It's specified by axis of
---   rotation
-newtype GreatCircle c a = GreatCircle (Spherical c a)
 
 
 ----------------------------------------------------------------
