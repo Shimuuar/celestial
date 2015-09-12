@@ -1,14 +1,16 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable  #-}
+{-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 -- |
 -- Type-safe angles
 module Data.Angle where
 
-import Data.Typeable
+import Data.Data     (Data,Typeable,typeOf,Proxy(..))
+import GHC.Generics  (Generic)
 
 -- | Type safe wrapper for angle
 newtype Angle t a = Angle a
-                    deriving (Eq,Ord)
+                    deriving (Eq,Ord, Data,Typeable,Generic)
 
 instance (Typeable t, AngularUnit t, Floating a, Show a) => Show (Angle t a) where
   show (Angle a) = "Angle "
@@ -38,13 +40,13 @@ cos' = cos . asRadians
 tan' :: (Floating a, AngularUnit t) => Angle t a -> a
 tan' = tan . asRadians
 
-data Radians  deriving Typeable
-data Degrees  deriving Typeable
-data Minutes  deriving Typeable
-data Seconds  deriving Typeable
-data HourRA   deriving Typeable
-data MinuteRA deriving Typeable
-data SecondRA deriving Typeable
+data Radians  deriving (Typeable)
+data Degrees  deriving (Typeable)
+data Minutes  deriving (Typeable)
+data Seconds  deriving (Typeable)
+data HourRA   deriving (Typeable)
+data MinuteRA deriving (Typeable)
+data SecondRA deriving (Typeable)
 
 -- | Type class for type-safe angles
 class AngularUnit t where
