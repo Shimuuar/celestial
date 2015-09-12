@@ -20,6 +20,7 @@ module Celestial.Coordinates (
   , J1900
   , J1950
   , J2000
+  , Proj
     -- ** Other data types
   , GreatCircle(..)
     -- * Projection plane
@@ -86,21 +87,6 @@ newtype GreatCircle c a = GreatCircle (Spherical c a)
 
 
 ----------------------------------------------------------------
--- Projection plane
-----------------------------------------------------------------
-
--- | Projection of celestial coordinates to 2D plane
-newtype ProjCoord a = ProjCoord (Vec2 a)
-
-type instance F.Dim ProjCoord = F.N2
-instance Unbox F.N2 a => F.Vector ProjCoord a where
-  inspect  (ProjCoord v) = F.inspect v
-  construct = ProjCoord `fmap` F.construct
-
-
-
-
-----------------------------------------------------------------
 -- Type tags for coordinate systems
 ----------------------------------------------------------------
 
@@ -113,3 +99,21 @@ data EquatorialCoord epoch
 data J1900
 data J1950
 data J2000
+
+
+-- | Projection coordinate system. 
+data Proj
+
+
+
+----------------------------------------------------------------
+-- Projection plane
+----------------------------------------------------------------
+
+-- | Projection of celestial coordinates to 2D plane
+newtype ProjCoord a = ProjCoord (Vec2 a)
+
+type instance F.Dim ProjCoord = F.N2
+instance Unbox F.N2 a => F.Vector ProjCoord a where
+  inspect  (ProjCoord v) = F.inspect v
+  construct = ProjCoord `fmap` F.construct
