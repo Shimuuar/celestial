@@ -15,6 +15,6 @@ import GHC.Generics (Generic)
 -- | Location on Earth
 data Location = Location
   { geoLatitude  :: Angle Degrees Double
-  , getLongitude :: Angle Degrees Double
+  , geoLongitude :: Angle Degrees Double
   }
   deriving (Show,Eq, Typeable,Generic)
