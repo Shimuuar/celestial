@@ -1,3 +1,4 @@
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -12,6 +13,7 @@ module Celestial.Coordinates (
     Spherical(..)
   , fromSperical
   , CoordTransform(..)
+  , toCoord
     -- ** Coordinate systems
   , HorizonalCoord
   , EquatorialCoord
@@ -28,7 +30,7 @@ import Data.Angle
 import Control.Category
 import qualified Data.Vector.Fixed as F
 import           Data.Vector.Fixed.Unboxed (Vec2,Vec3,Unbox)
-import Data.Quaternion (Quaternion)
+import Data.Quaternion -- (Quaternion)
 
 import Prelude hiding ((.),id)
 
@@ -59,11 +61,24 @@ fromSperical α δ = Spherical $
 newtype CoordTransform a c1 c2 = CoordTransform
   { coordTransformRepr :: Quaternion a }
 
+deriving instance (Show a, Unbox F.N4 a) => Show (CoordTransform a c1 c2)
+deriving instance (Eq a,   Unbox F.N4 a) => Eq   (CoordTransform a c1 c2)
+
 instance (Unbox F.N4 a, Floating a) => Category (CoordTransform a) where
   id = CoordTransform 1
   -- FIXME: is composition correct?
   CoordTransform f . CoordTransform g = CoordTransform (f * g)
 
+
+-- | Transform spherical coordinates from one coordinate system to
+--   another.
+toCoord
+  :: (Unbox F.N3 a, Unbox F.N4 a, Floating a)
+  => CoordTransform a c1 c2
+  -> Spherical c1 a
+  -> Spherical c2 a
+toCoord (CoordTransform q) (Spherical v)
+  = Spherical $ rotateVector q v
 
 -- | Great circle on celestial sphere. It's specified by axis of
 --   rotation
