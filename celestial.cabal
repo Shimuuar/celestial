@@ -23,9 +23,12 @@ Library
   Default-Language:    Haskell2010
   Build-Depends:
     base         >=3 && <5,
+    time,
     my-vectorspace,
     fixed-vector >=0.8
   Exposed-modules:
     Data.Angle
     Celestial.Projection
     Celestial.Coordinates
+    Celestial.Geo
+    Celestial.Time
