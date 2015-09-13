@@ -16,9 +16,9 @@ import qualified Data.Vector.Fixed as F
 --
 --   Point (0,0,-1) maps to (0,0)
 data Projection c a = Projection
-  { project   :: Spherical c a -> Maybe (ProjCoord a)
+  { project   :: Spherical Proj a -> Maybe (ProjCoord a)
     -- ^ 
-  , unproject :: ProjCoord a   -> Maybe (Spherical c a)
+  , unproject :: ProjCoord a      -> Maybe (Spherical Proj a)
     -- ^
   , maxR      :: Maybe Double
     -- ^ Maximum possible distance for projected point
