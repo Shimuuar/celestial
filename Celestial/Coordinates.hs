@@ -13,9 +13,6 @@ module Celestial.Coordinates (
     Spherical(..)
   , toEquatorial
   , toHorizontal
-  , CoordTransform(..)
-  , inverseTansform
-  , toCoord
     -- ** Coordinate systems
   , HorizonalCoord
   , EquatorialCoord
@@ -23,7 +20,13 @@ module Celestial.Coordinates (
   , J1950
   , J2000
   , Proj
-    -- ** Other data types
+    -- * Coordinate transformations
+  , CoordTransform(..)
+  , inverseTansform
+  , toCoord
+  , lookAtHorizontal
+  , lookAtEquatorial
+    -- * Other data types
   , GreatCircle(..)
     -- * Projection plane
   , ProjCoord(..)
@@ -108,6 +111,33 @@ toCoord (CoordTransform q) (Spherical v)
 newtype GreatCircle c a = GreatCircle (Spherical c a)
 
 
+-- | Simple camera coordinate transformation for
+lookAtHorizontal
+  :: (Unbox F.N3 a, Unbox F.N4 a, RealFloat a, AngularUnit t1, AngularUnit t2)
+  => Angle t1 a                 -- ^ Azimuth
+  -> Angle t2 a                 -- ^ Height
+  -> CoordTransform a HorizonalCoord Proj
+lookAtHorizontal a h = CoordTransform
+  $ 1
+  * rotZ (pi/2)
+  * rotY (pi/2)
+  * rotY (asRadians h)
+  * rotZ (asRadians a)
+
+-- | Simple camera coordinate transformation for
+lookAtEquatorial
+  :: (Unbox F.N3 a, Unbox F.N4 a, RealFloat a, AngularUnit t1, AngularUnit t2)
+  => Angle t1 a                 -- ^ Right ascension
+  -> Angle t2 a                 -- ^ Declination
+  -> CoordTransform a (EquatorialCoord c) Proj
+lookAtEquatorial α δ = CoordTransform
+  $ 1
+  * rotZ (pi/2)
+  * rotY (pi/2)
+  * rotY (asRadians δ)
+  * rotZ (negate $asRadians α)
+
+
 ----------------------------------------------------------------
 -- Type tags for coordinate systems
 ----------------------------------------------------------------
@@ -123,7 +153,7 @@ data J1950
 data J2000
 
 
--- | Projection coordinate system. 
+-- | Projection coordinate system.
 data Proj
 
 
