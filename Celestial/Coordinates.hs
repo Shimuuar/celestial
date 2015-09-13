@@ -116,6 +116,10 @@ toCoord (CoordTransform q) (Spherical v)
 newtype GreatCircle c a = GreatCircle (Spherical c a)
 
 
+----------------------------------------------------------------
+-- Transformations
+----------------------------------------------------------------
+
 -- | Simple camera coordinate transformation for
 lookAtHorizontal
   :: (Unbox F.N3 a, Unbox F.N4 a, RealFloat a, AngularUnit t1, AngularUnit t2)
@@ -141,6 +145,7 @@ lookAtEquatorial α δ = CoordTransform
   * rotY (pi/2)
   * rotY (asRadians δ)
   * rotZ (negate $asRadians α)
+
 
 
 ----------------------------------------------------------------
