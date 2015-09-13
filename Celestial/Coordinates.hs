@@ -11,7 +11,8 @@
 module Celestial.Coordinates (
     -- * Spherical coordinates
     Spherical(..)
-  , fromSperical
+  , toEquatorial
+  , toHorizontal
   , CoordTransform(..)
   , inverseTansform
   , toCoord
@@ -51,14 +52,26 @@ deriving instance (Show a, Unbox F.N3 a) => Show (Spherical c a)
 deriving instance (Eq a,   Unbox F.N3 a) => Eq   (Spherical c a)
 
 -- | Convert from spherical coordinates to unit vector representation
-fromSperical
+-- for equatorial coordinates. (RA grows CCW)
+toEquatorial
   :: (AngularUnit α, AngularUnit δ, Floating a, Unbox F.N3 a)
-  => Angle α a -> Angle δ a -> Spherical c a
-fromSperical α δ = Spherical $
-  F.mk3 (f * cos' α) (f * sin' α) z
+  => Angle α a -> Angle δ a -> Spherical (EquatorialCoord c) a
+toEquatorial α δ = Spherical $
+  F.mk3 (c * cos' α) (c * sin' α) z
   where
     z = sin' δ
-    f = cos' δ
+    c = cos' δ
+
+-- | Convert from spherical coordinates to unit vector representation
+-- for horizontal coordinates. (RA grows CCW)
+toHorizontal
+  :: (AngularUnit α, AngularUnit δ, Floating a, Unbox F.N3 a)
+  => Angle α a -> Angle δ a -> Spherical HorizonalCoord a
+toHorizontal α δ = Spherical $
+  F.mk3 (c * cos' α) (negate $ c * sin' α) z
+  where
+    z = sin' δ
+    c = cos' δ
 
 -- | Coordinate transformation from coordinate system @c1@ to
 -- coordinate system @c2@.
