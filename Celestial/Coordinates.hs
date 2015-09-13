@@ -13,6 +13,7 @@ module Celestial.Coordinates (
     Spherical(..)
   , fromSperical
   , CoordTransform(..)
+  , inverseTansform
   , toCoord
     -- ** Coordinate systems
   , HorizonalCoord
@@ -70,6 +71,12 @@ instance (Unbox F.N4 a, Floating a) => Category (CoordTransform a) where
   -- FIXME: is composition correct?
   CoordTransform f . CoordTransform g = CoordTransform (f * g)
 
+-- | Inverse transform
+inverseTansform
+  :: (Floating a, Unbox F.N3 a, Unbox F.N4 a)
+  => CoordTransform a c1 c2
+  -> CoordTransform a c2 c1
+inverseTansform (CoordTransform q) = CoordTransform $ recip q
 
 -- | Transform spherical coordinates from one coordinate system to
 --   another.
