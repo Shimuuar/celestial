@@ -47,6 +47,8 @@ import Prelude hiding ((.),id)
 --   allows cheap conversion between different coordinate systems.
 newtype Spherical c a = Spherical (Vec3 a)
 
+deriving instance (Show a, Unbox F.N3 a) => Show (Spherical c a)
+deriving instance (Eq a,   Unbox F.N3 a) => Eq   (Spherical c a)
 
 -- | Convert from spherical coordinates to unit vector representation
 fromSperical
