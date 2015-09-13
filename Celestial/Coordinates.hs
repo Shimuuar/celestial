@@ -88,6 +88,8 @@ instance (Unbox F.N4 a, Floating a) => Category (CoordTransform a) where
   id = CoordTransform 1
   -- FIXME: is composition correct?
   CoordTransform f . CoordTransform g = CoordTransform (f * g)
+  {-# INLINE id  #-}
+  {-# INLINE (.) #-}
 
 -- | Inverse transform
 inverseTansform
@@ -95,6 +97,7 @@ inverseTansform
   => CoordTransform a c1 c2
   -> CoordTransform a c2 c1
 inverseTansform (CoordTransform q) = CoordTransform $ recip q
+{-# INLINE inverseTansform #-}
 
 -- | Transform spherical coordinates from one coordinate system to
 --   another.
@@ -105,6 +108,8 @@ toCoord
   -> Spherical c2 a
 toCoord (CoordTransform q) (Spherical v)
   = Spherical $ rotateVector q v
+{-# INLINE toCoord #-}
+
 
 -- | Great circle on celestial sphere. It's specified by axis of
 --   rotation
