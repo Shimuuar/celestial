@@ -18,18 +18,18 @@ instance (Typeable t, AngularUnit t, Floating a, Show a) => Show (Angle t a) whe
                 ++ " "
                 ++ show (a * angularUnit (Proxy :: Proxy t))
 
+angle :: forall t a. (AngularUnit t, Floating a) => a -> Angle t a
+angle a = Angle $ a / angularUnit ([] :: [t])
+
 convertAngle
   :: forall a t1 t2. (Floating a, AngularUnit t1, AngularUnit t2)
   => Angle t1 a -> Angle t2 a 
-convertAngle (Angle a) = Angle $
-  a * angularUnit ([]::[t2]) / angularUnit ([]::[t1])
+convertAngle (Angle a) = Angle a
 
 asRadians
   :: forall a t. (Floating a, AngularUnit t)
   => Angle t a -> a
-asRadians a =
-  case convertAngle a :: Angle Radians a of
-    Angle x -> x
+asRadians (Angle a) = a
 
 sin' :: (Floating a, AngularUnit t) => Angle t a -> a
 sin' = sin . asRadians
@@ -39,6 +39,16 @@ cos' = cos . asRadians
 
 tan' :: (Floating a, AngularUnit t) => Angle t a -> a
 tan' = tan . asRadians
+
+asin' :: (Floating a, AngularUnit t) => a -> Angle t a
+asin' = Angle . asin
+
+acos' :: (Floating a, AngularUnit t) => a -> Angle t a
+acos' = Angle . acos
+
+atan' :: (Floating a, AngularUnit t) => a -> Angle t a
+atan' = Angle . atan
+
 
 data Radians  deriving (Typeable)
 data Degrees  deriving (Typeable)
