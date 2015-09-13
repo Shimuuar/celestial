@@ -144,7 +144,7 @@ lookAtEquatorial α δ = CoordTransform
   * rotZ (pi/2)
   * rotY (pi/2)
   * rotY (asRadians δ)
-  * rotZ (negate $asRadians α)
+  * rotZ (negate $ asRadians α)
 
 
 
