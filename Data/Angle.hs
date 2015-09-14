@@ -21,6 +21,9 @@ instance (Typeable t, AngularUnit t, Floating a, Show a) => Show (Angle t a) whe
 angle :: forall t a. (AngularUnit t, Floating a) => a -> Angle t a
 angle a = Angle $ a / angularUnit ([] :: [t])
 
+getAngle :: forall t a. (AngularUnit t, Floating a) => Angle t a -> a
+getAngle (Angle a) = a * angularUnit ([] :: [t])
+
 convertAngle
   :: forall a t1 t2. (Floating a, AngularUnit t1, AngularUnit t2)
   => Angle t1 a -> Angle t2 a 

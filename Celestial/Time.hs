@@ -104,5 +104,5 @@ meanLST :: Location -> JD -> LST
 meanLST loc jd
   = LST (t + d)
   where
-    GST   t = meanGST jd
-    Angle d = convertAngle (geoLongitude loc) :: Angle HourRA Double
+    GST t = meanGST jd
+    d     = getAngle (convertAngle (geoLongitude loc) :: Angle HourRA Double)

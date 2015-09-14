@@ -1,19 +1,22 @@
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies     #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 -- |
 -- Coordinates for celestial sphere
 module Celestial.Coordinates (
     -- * Spherical coordinates
     Spherical(..)
-  , toEquatorial
-  , toHorizontal
+  , fromSpherical
     -- ** Coordinate systems
+  , PhiDirection(..)
+  , SphericalCoord(..)
   , HorizonalCoord
   , EquatorialCoord
   , J1900
@@ -34,6 +37,7 @@ module Celestial.Coordinates (
 
 import Data.Angle
 import Control.Category
+import Data.Typeable
 import qualified Data.Vector.Fixed as F
 import           Data.Vector.Fixed.Unboxed (Vec2,Vec3,Unbox)
 import Data.Quaternion -- (Quaternion)
@@ -54,27 +58,26 @@ newtype Spherical c a = Spherical (Vec3 a)
 deriving instance (Show a, Unbox F.N3 a) => Show (Spherical c a)
 deriving instance (Eq a,   Unbox F.N3 a) => Eq   (Spherical c a)
 
--- | Convert from spherical coordinates to unit vector representation
--- for equatorial coordinates. (RA grows CCW)
-toEquatorial
-  :: (AngularUnit α, AngularUnit δ, Floating a, Unbox F.N3 a)
-  => Angle α a -> Angle δ a -> Spherical (EquatorialCoord c) a
-toEquatorial α δ = Spherical $
-  F.mk3 (c * cos' α) (c * sin' α) z
-  where
-    z = sin' δ
-    c = cos' δ
 
 -- | Convert from spherical coordinates to unit vector representation
--- for horizontal coordinates. (RA grows CCW)
-toHorizontal
-  :: (AngularUnit α, AngularUnit δ, Floating a, Unbox F.N3 a)
-  => Angle α a -> Angle δ a -> Spherical HorizonalCoord a
-toHorizontal α δ = Spherical $
-  F.mk3 (c * cos' α) (negate $ c * sin' α) z
+-- for equatorial coordinates. (RA grows CCW)
+fromSpherical
+  :: forall α δ a c. (AngularUnit α, AngularUnit δ, SphericalCoord c, Floating a, Unbox F.N3 a)
+  => Angle α a
+  -> Angle δ a
+  -> Spherical c a
+{-# INLINE fromSpherical #-}
+fromSpherical α δ = Spherical $
+  F.mk3 x y z
   where
+    x = c * cos' α
+    y = sign $ c * sin' α
     z = sin' δ
     c = cos' δ
+    sign = case phiDirection ([] :: [c]) of
+             CW  -> negate
+             CCW -> id
+
 
 -- | Coordinate transformation from coordinate system @c1@ to
 -- coordinate system @c2@.
@@ -152,19 +155,35 @@ lookAtEquatorial α δ = CoordTransform
 -- Type tags for coordinate systems
 ----------------------------------------------------------------
 
+-- | In which direction angle φ grows
+data PhiDirection
+  = CW                          -- ^ φ grows clockwise
+  | CCW                         -- ^ φ grows counterclockwise
+
+-- | In which direction angle φ (azimuth, RA) grows. Different
+--   coordinate systems use different conventions.
+class SphericalCoord c where
+  phiDirection :: p c -> PhiDirection
+
+
 -- | Horizontal coordinate system
-data HorizonalCoord
+data HorizonalCoord deriving Typeable
 
 -- | Equatorial coordinate system. It's parametrized by epoch
-data EquatorialCoord epoch
+data EquatorialCoord epoch deriving Typeable
 
-data J1900
-data J1950
-data J2000
+data J1900 deriving Typeable
+data J1950 deriving Typeable
+data J2000 deriving Typeable
 
 
 -- | Projection coordinate system.
 data Proj
+
+instance SphericalCoord HorizonalCoord where
+  phiDirection _ = CW
+instance SphericalCoord (EquatorialCoord c) where
+  phiDirection _ = CCW
 
 
 
