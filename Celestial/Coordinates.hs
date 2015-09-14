@@ -8,12 +8,14 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
 -- |
 -- Coordinates for celestial sphere
 module Celestial.Coordinates (
     -- * Spherical coordinates
     Spherical(..)
   , fromSpherical
+  , toSpherical
     -- ** Coordinate systems
   , PhiDirection(..)
   , SphericalCoord(..)
@@ -60,7 +62,6 @@ deriving instance (Eq a,   Unbox F.N3 a) => Eq   (Spherical c a)
 
 
 -- | Convert from spherical coordinates to unit vector representation
--- for equatorial coordinates. (RA grows CCW)
 fromSpherical
   :: forall α δ a c. (AngularUnit α, AngularUnit δ, SphericalCoord c, Floating a, Unbox F.N3 a)
   => Angle α a
@@ -77,6 +78,28 @@ fromSpherical α δ = Spherical $
     sign = case phiDirection ([] :: [c]) of
              CW  -> negate
              CCW -> id
+
+-- | Convert from spherical coordinates to unit vector representation
+toSpherical
+  :: forall α δ a c. (AngularUnit α, AngularUnit δ, SphericalCoord c, Floating a, Ord a, Unbox F.N3 a)
+  => Spherical c a
+  -> (Angle α a, Angle δ a)
+{-# INLINE toSpherical #-}
+toSpherical (Spherical (F.convert -> (x,y,z))) =
+  ( case phiDirection ([] :: [c]) of
+      CW  -> Angle aCW
+      CCW -> Angle aCCW
+  , asin' z
+  )
+  where
+    aCCW = case atan (y/x) of
+             a | x > 0 && y >= 0 -> a
+               | x > 0 && y <  0 -> a + 2*pi
+               | otherwise       -> a + pi
+    aCW  = case atan (y/x) of
+             a | x > 0 && y >= 0 -> 2*pi - a
+               | x > 0 && y <  0 -> -a
+               | otherwise       -> pi - a
 
 
 -- | Coordinate transformation from coordinate system @c1@ to
