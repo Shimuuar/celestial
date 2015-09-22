@@ -36,8 +36,7 @@ module Celestial.Coordinates (
   , inverseTansform
   , toCoord
     -- ** Concrete transformations
-  , lookAtHorizontal
-  , lookAtEquatorial
+  , lookAt
   , equatorialToHorizontal
   , horizontalToEquatorial
     -- * Other data types
@@ -212,31 +211,21 @@ newtype GreatCircle c a = GreatCircle (Spherical c a)
 ----------------------------------------------------------------
 
 -- | Simple camera coordinate transformation for
-lookAtHorizontal
-  :: (Unbox F.N3 a, Unbox F.N4 a, RealFloat a, AngularUnit t1, AngularUnit t2)
+lookAt
+  :: forall t1 t2 c a. (Unbox F.N3 a, Unbox F.N4 a, RealFloat a, AngularUnit t1, AngularUnit t2, SphericalCoord c)
   => Angle t1 a                 -- ^ Azimuth
   -> Angle t2 a                 -- ^ Height
-  -> CoordTransform a HorizonalCoord Proj
-lookAtHorizontal a h = CoordTransform
+  -> CoordTransform a c Proj
+lookAt a h = CoordTransform
   $ 1
   * rotZ (pi/2)
   * rotY (pi/2)
   * rotY (asRadians h)
-  * rotZ (asRadians a)
-
--- | Simple camera coordinate transformation for
-lookAtEquatorial
-  :: (Unbox F.N3 a, Unbox F.N4 a, RealFloat a, AngularUnit t1, AngularUnit t2)
-  => Angle t1 a                 -- ^ Right ascension
-  -> Angle t2 a                 -- ^ Declination
-  -> CoordTransform a (EquatorialCoord c) Proj
-lookAtEquatorial α δ = CoordTransform
-  $ 1
-  * rotZ (pi/2)
-  * rotY (pi/2)
-  * rotY (asRadians δ)
-  * rotZ (negate $ asRadians α)
-
+  * rotZ φ
+  where
+    φ = case phiDirection ([] :: [c]) of
+          CW  -> asRadians a
+          CCW -> negate $ asRadians a
 
 
 ----------------------------------------------------------------
