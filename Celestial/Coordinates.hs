@@ -10,39 +10,51 @@
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE ViewPatterns               #-}
 -- |
--- Coordinates for celestial sphere
+-- Data types for coordinates on celestial sphere and conversions
+-- between different representations. Usually point on celestial
+-- sphere are represented using as pair of angles. This representation
+-- is compact conversions between different coordinate systems are
+-- complicated and computationally costly so library uses another
+-- representation for point on celestial sphere: vector with unit norm.
 module Celestial.Coordinates (
     -- * Spherical coordinates
     Spherical(..)
-  , fromSpherical
-  , toSpherical
     -- ** Coordinate systems
-  , PhiDirection(..)
-  , SphericalCoord(..)
   , HorizonalCoord
   , EquatorialCoord
-  , J1900
-  , J1950
+  , B1900
+  , B1950
   , J2000
   , Proj
+    -- ** Conversion to spherical coordinates
+  , SphericalCoord(..)
+  , PhiDirection(..)
+  , fromSpherical
+  , toSpherical
     -- * Coordinate transformations
   , CoordTransform(..)
   , inverseTansform
   , toCoord
+    -- ** Concrete transformations
   , lookAtHorizontal
   , lookAtEquatorial
+  , equatorialToHorizontal
+  , horizontalToEquatorial
     -- * Other data types
   , GreatCircle(..)
     -- * Projection plane
   , ProjCoord(..)
   ) where
 
-import Data.Angle
 import Control.Category
 import Data.Typeable
 import qualified Data.Vector.Fixed as F
 import           Data.Vector.Fixed.Unboxed (Vec2,Vec3,Unbox)
 import Data.Quaternion -- (Quaternion)
+
+import Data.Angle
+import Celestial.Geo  (Location(..))
+import Celestial.Time (LST(..))
 
 import Prelude hiding ((.),id)
 
@@ -61,11 +73,38 @@ deriving instance (Show a, Unbox F.N3 a) => Show (Spherical c a)
 deriving instance (Eq a,   Unbox F.N3 a) => Eq   (Spherical c a)
 
 
+
+----------------------------------------------------------------
+-- Type tags for coordinate systems
+----------------------------------------------------------------
+
+-- | Horizontal coordinate system
+data HorizonalCoord deriving Typeable
+
+-- | Equatorial coordinate system. It's parametrized by epoch
+data EquatorialCoord epoch deriving Typeable
+
+data B1900 deriving Typeable
+data B1950 deriving Typeable
+data J2000 deriving Typeable
+
+
+-- | Projection coordinate system. It projection coordinate system
+-- point (0,0,-1) corresponds to center of field of view, Y point up
+-- and X points right in projection plane.
+data Proj
+
+
+
+----------------------------------------------------------------
+-- Conversions to/from spherical coords
+----------------------------------------------------------------
+
 -- | Convert from spherical coordinates to unit vector representation
 fromSpherical
   :: forall α δ a c. (AngularUnit α, AngularUnit δ, SphericalCoord c, Floating a, Unbox F.N3 a)
-  => Angle α a
-  -> Angle δ a
+  => Angle α a                  -- ^ Azimuth\/RA\/etc [0,2π]
+  -> Angle δ a                  -- ^ Height\/declination\/etc [-π\/2,π\/2]
   -> Spherical c a
 {-# INLINE fromSpherical #-}
 fromSpherical α δ = Spherical $
@@ -82,8 +121,9 @@ fromSpherical α δ = Spherical $
 -- | Convert from spherical coordinates to unit vector representation
 toSpherical
   :: forall α δ a c. (AngularUnit α, AngularUnit δ, SphericalCoord c, Floating a, Ord a, Unbox F.N3 a)
-  => Spherical c a
-  -> (Angle α a, Angle δ a)
+  => Spherical c a              -- ^ Point on celestial sphere
+  -> (Angle α a, Angle δ a)     -- ^ Pair of Azimuth\/RA\/etc [0,2π]
+                                -- and height\/declination\/etc [-π\/2,π\/2]
 {-# INLINE toSpherical #-}
 toSpherical (Spherical (F.convert -> (x,y,z))) =
   ( case phiDirection ([] :: [c]) of
@@ -137,6 +177,31 @@ toCoord (CoordTransform q) (Spherical v)
 {-# INLINE toCoord #-}
 
 
+
+-- | Convert equatorial coordinates to horizontal
+equatorialToHorizontal
+  :: Location
+  -> LST
+  -> CoordTransform Double (EquatorialCoord j) HorizonalCoord
+equatorialToHorizontal loc (LST lst) = CoordTransform
+  $ rotation (negate $ asRadians a) axis
+  * rotY (negate $ pi/2 - asRadians (geoLatitude loc))
+  where
+    a    = angle lst :: Angle HourRA Double
+    axis = (- (cos' (geoLatitude loc))
+           , 0
+           , sin'   (geoLatitude loc)
+           )
+
+-- | Convert horizontal coordinates to equatorial
+horizontalToEquatorial
+  :: Location
+  -> LST
+  -> CoordTransform Double HorizonalCoord (EquatorialCoord j)
+horizontalToEquatorial loc lst
+  = inverseTansform $ equatorialToHorizontal loc lst
+
+
 -- | Great circle on celestial sphere. It's specified by axis of
 --   rotation
 newtype GreatCircle c a = GreatCircle (Spherical c a)
@@ -187,21 +252,6 @@ data PhiDirection
 --   coordinate systems use different conventions.
 class SphericalCoord c where
   phiDirection :: p c -> PhiDirection
-
-
--- | Horizontal coordinate system
-data HorizonalCoord deriving Typeable
-
--- | Equatorial coordinate system. It's parametrized by epoch
-data EquatorialCoord epoch deriving Typeable
-
-data J1900 deriving Typeable
-data J1950 deriving Typeable
-data J2000 deriving Typeable
-
-
--- | Projection coordinate system.
-data Proj
 
 instance SphericalCoord HorizonalCoord where
   phiDirection _ = CW
