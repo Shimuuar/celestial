@@ -15,18 +15,19 @@ import qualified Data.Vector.Fixed as F
 --   although either could be total for particular projection.
 --
 --   Point (0,0,-1) maps to (0,0)
-data Projection c a = Projection
+data Projection a = Projection
   { project   :: Spherical Proj a -> Maybe (ProjCoord a)
     -- ^ 
   , unproject :: ProjCoord a      -> Maybe (Spherical Proj a)
     -- ^
   , maxR      :: Maybe Double
-    -- ^ Maximum possible distance for projected point
+    -- ^ Maximum possible distance for projected point. Nothing is
+    -- it's infinity
   }
 
 
 -- | Orthographic projection
-orthographic :: Projection c Double
+orthographic :: Projection Double
 orthographic = Projection
   { project = \(Spherical v) -> case F.convert v of
       (x,y,z) | z < 0     -> Just $ ProjCoord $ F.mk2 x y
@@ -37,11 +38,22 @@ orthographic = Projection
   , maxR      = Just 1
   }
 
+stereographic :: Projection Double
+stereographic = Projection
+  { project   = \(Spherical v) -> case F.convert v of
+      (x,y,z) | z < 1     -> Just $ ProjCoord $ F.mk2 (x / (1-z)) (y / (1-z))
+              | otherwise -> Nothing
+  , unproject = \(F.convert -> (x,y)) ->
+      let z2 = x*x + y*x
+      in Just $ Spherical $ F.mk3 ( 2*x   / (1+z2))
+                                  ( 2*y   / (1+z2))
+                                  ((z2-1) / (1+z2))
+  , maxR      = Nothing
+  }
 
 -- Projections to be supported:
 --   + Lambert-azimuthal equal area
 --   + Azimuthal equidistant
---   + Orthographic
 --   + Equirectangular
 --   + Stereographic
 --   + Glonomonic
