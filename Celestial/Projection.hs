@@ -31,7 +31,9 @@ orthographic = Projection
   { project = \(Spherical v) -> case F.convert v of
       (x,y,z) | z < 0     -> Just $ ProjCoord $ F.mk2 x y
               | otherwise -> Nothing
-  , unproject = undefined
+  , unproject = \(F.convert -> (x,y)) -> case x*x + y*y of
+      z2 | z2 >= 1   -> Nothing
+         | otherwise -> Just $ Spherical $ F.mk3 x y (sqrt $ 1 - z2)
   , maxR      = Just 1
   }
 
