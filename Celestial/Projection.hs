@@ -38,6 +38,7 @@ orthographic = Projection
   , maxR      = Just 1
   }
 
+-- | Stereographic projection
 stereographic :: Projection Double
 stereographic = Projection
   { project   = \(Spherical v) -> case F.convert v of
@@ -51,9 +52,21 @@ stereographic = Projection
   , maxR      = Nothing
   }
 
+gnomonic :: Projection Double
+gnomonic = Projection
+  { project   = \(Spherical v) -> case F.convert v of
+      (x,y,z) | z < 0     -> Just $ ProjCoord $ F.mk2 (x / (-z)) (y / (-z))
+              | otherwise -> Nothing
+  , unproject = undefined {- \(F.convert -> (x,y)) ->
+      let z2 = x*x + y*x
+      in Just $ Spherical $ F.mk3 ( 2*x   / (1+z2))
+                                  ( 2*y   / (1+z2))
+                                  ((z2-1) / (1+z2)) -}
+  , maxR      = Nothing
+  }
+
 -- Projections to be supported:
 --   + Lambert-azimuthal equal area
 --   + Azimuthal equidistant
 --   + Equirectangular
---   + Stereographic
---   + Glonomonic
+
