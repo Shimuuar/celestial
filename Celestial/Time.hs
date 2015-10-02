@@ -13,6 +13,8 @@
 module Celestial.Time (
     -- * Juliad day
     JD(..)
+  , utc2JD
+  , jd2UTC
   , normalizeJD
   , currentJD
     -- * Sidereal time
@@ -22,6 +24,7 @@ module Celestial.Time (
   , meanLST
   ) where
 
+import Data.Functor
 import Data.Time.Calendar
 import Data.Time.Clock
 import Data.Data    (Typeable,Data)
@@ -53,15 +56,25 @@ instance Num JD where
   signum = error "No sensible signum for JD"
 
 
--- | Obtain current JD
-currentJD :: IO JD
-currentJD = do
-  UTCTime { utctDay     = ModifiedJulianDay day
-          , utctDayTime = dt
-          } <- getCurrentTime
-  return $ case (realToFrac dt / 86400) + 0.5 of
+-- | Convert UTC time to JD
+utc2JD :: UTCTime -> JD
+utc2JD UTCTime { utctDay     = ModifiedJulianDay day
+               , utctDayTime = dt
+               } =
+  case (realToFrac dt / 86400) + 0.5 of
     x | x >= 1    -> JD (day + 2400001) (x - 1)
       | otherwise -> JD (day + 2400000)  x
+
+-- | Convert JD to UTC
+jd2UTC :: JD -> UTCTime
+jd2UTC (JD jd dt) = UTCTime
+  { utctDay     = ModifiedJulianDay $ jd  - 2400000
+  , utctDayTime = realToFrac (dt - 0.5) * 86400
+  }
+
+-- | Obtain current JD
+currentJD :: IO JD
+currentJD = utc2JD <$> getCurrentTime
 
 -- | Normalize JD. Put fractional part in [0,1) range
 normalizeJD :: JD -> JD
