@@ -57,11 +57,9 @@ gnomonic = Projection
   { project   = \(Spherical v) -> case F.convert v of
       (x,y,z) | z < 0     -> Just $ ProjCoord $ F.mk2 (x / (-z)) (y / (-z))
               | otherwise -> Nothing
-  , unproject = undefined {- \(F.convert -> (x,y)) ->
-      let z2 = x*x + y*x
-      in Just $ Spherical $ F.mk3 ( 2*x   / (1+z2))
-                                  ( 2*y   / (1+z2))
-                                  ((z2-1) / (1+z2)) -}
+  , unproject = \(F.convert -> (x,y)) ->
+      let l = sqrt (1 + x*x + y*y)
+      in Just $ Spherical $ F.mk3 (x/l) (y/l) (-1/l)
   , maxR      = Nothing
   }
 
