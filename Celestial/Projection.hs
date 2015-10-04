@@ -4,7 +4,7 @@
 -- Common interface for calculating projections from sphere to plane
 module Celestial.Projection where
 
-
+import Control.Monad (guard)
 import Celestial.Coordinates
 import qualified Data.Vector.Fixed as F
 
@@ -17,7 +17,7 @@ import qualified Data.Vector.Fixed as F
 --   Point (0,0,-1) maps to (0,0)
 data Projection a = Projection
   { project   :: Spherical Proj a -> Maybe (ProjCoord a)
-    -- ^ 
+    -- ^
   , unproject :: ProjCoord a      -> Maybe (Spherical Proj a)
     -- ^
   , maxR      :: Maybe Double
@@ -63,8 +63,26 @@ gnomonic = Projection
   , maxR      = Nothing
   }
 
+azimuthalEquidistant :: Projection Double
+azimuthalEquidistant = Projection
+  { project = \(Spherical v) -> case F.convert v of
+      (x,y,z) | z < 0 -> case negate z of
+                           0  -> Just $ ProjCoord $ F.mk2 0 0
+                           z' -> Just $ ProjCoord $ F.mk2 (x * sc) (y * sc)
+              | otherwise -> Nothing
+  , unproject = \(F.convert -> (x,y)) -> do
+       let θ = sqrt $ x*x + y*y
+       guard $ θ < pi/2
+       let sc = sinc θ
+       case θ of
+         0 -> return $ Spherical $ F.mk3 0 0 (-1)
+         _ -> return $ Spherical $ F.mk3 (x*sc) (y*sc) (cos θ)
+  , maxR      = Just (pi/2)
+  }
+
+sinc :: Double -> Double
+sinc x = sin x / x
+
 -- Projections to be supported:
 --   + Lambert-azimuthal equal area
---   + Azimuthal equidistant
 --   + Equirectangular
-
