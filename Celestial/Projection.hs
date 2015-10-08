@@ -69,6 +69,8 @@ azimuthalEquidistant = Projection
       (x,y,z) | z < 0 -> case negate z of
                            0  -> Just $ ProjCoord $ F.mk2 0 0
                            z' -> Just $ ProjCoord $ F.mk2 (x * sc) (y * sc)
+                             where
+                               sc = acos z' / sqrt (x*x + y*y)
               | otherwise -> Nothing
   , unproject = \(F.convert -> (x,y)) -> do
        let θ = sqrt $ x*x + y*y
@@ -81,6 +83,7 @@ azimuthalEquidistant = Projection
   }
 
 sinc :: Double -> Double
+sinc 0 = 1
 sinc x = sin x / x
 
 -- Projections to be supported:
