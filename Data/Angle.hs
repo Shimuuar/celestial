@@ -24,14 +24,10 @@ angle a = Angle $ a / angularUnit ([] :: [t])
 getAngle :: forall t a. (AngularUnit t, Floating a) => Angle t a -> a
 getAngle (Angle a) = a * angularUnit ([] :: [t])
 
-convertAngle
-  :: forall a t1 t2. (Floating a, AngularUnit t1, AngularUnit t2)
-  => Angle t1 a -> Angle t2 a 
+convertAngle :: Angle t1 a -> Angle t2 a 
 convertAngle (Angle a) = Angle a
 
-asRadians
-  :: forall a t. (Floating a, AngularUnit t)
-  => Angle t a -> a
+asRadians :: Angle t a -> a
 asRadians (Angle a) = a
 
 sin' :: (Floating a, AngularUnit t) => Angle t a -> a
