@@ -32,3 +32,4 @@ Library
     Celestial.Coordinates
     Celestial.Geo
     Celestial.Time
+    Celestial.Orbit
