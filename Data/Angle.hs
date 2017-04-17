@@ -5,10 +5,13 @@
 -- Type-safe angles
 module Data.Angle where
 
+import Data.Coerce
+import Data.Classes.AdditiveGroup
 import Data.Data     (Data,Typeable,typeOf,Proxy(..))
 import GHC.Generics  (Generic)
 
--- | Type safe wrapper for angle
+-- | Type safe wrapper for angle. It uses type tag to keep track of
+--   units of measurements. Internally angle is stored in radians.
 newtype Angle t a = Angle a
                     deriving (Eq,Ord, Data,Typeable,Generic)
 
@@ -18,34 +21,49 @@ instance (Typeable t, AngularUnit t, Floating a, Show a) => Show (Angle t a) whe
                 ++ " "
                 ++ show (a * angularUnit (Proxy :: Proxy t))
 
+instance AdditiveMonoid a => AdditiveMonoid (Angle t a) where
+  zeroV = Angle zeroV
+  (.+.) = coerce ((.+.) :: a -> a -> a)
+
+instance AdditiveGroup a => AdditiveGroup (Angle t a) where
+  negateV = coerce (negateV :: a -> a)
+  (.-.)   = coerce ((.-.) :: a -> a -> a)
+
+-- | Construct angle from value using given measure units. For example:
+--
+-- > angle 30 :: Angle Degrees Double
+--
+-- construct 30 degrees angle
 angle :: forall t a. (AngularUnit t, Floating a) => a -> Angle t a
 angle a = Angle $ a / angularUnit ([] :: [t])
 
+-- | Get angle value in given measurements units.
 getAngle :: forall t a. (AngularUnit t, Floating a) => Angle t a -> a
 getAngle (Angle a) = a * angularUnit ([] :: [t])
 
-convertAngle :: Angle t1 a -> Angle t2 a 
+-- | Convert between different measurements units.
+convertAngle :: Angle t1 a -> Angle t2 a
 convertAngle (Angle a) = Angle a
 
 asRadians :: Angle t a -> a
 asRadians (Angle a) = a
 
-sin' :: (Floating a, AngularUnit t) => Angle t a -> a
+sin' :: (Floating a) => Angle t a -> a
 sin' = sin . asRadians
 
-cos' :: (Floating a, AngularUnit t) => Angle t a -> a
+cos' :: (Floating a) => Angle t a -> a
 cos' = cos . asRadians
 
-tan' :: (Floating a, AngularUnit t) => Angle t a -> a
+tan' :: (Floating a) => Angle t a -> a
 tan' = tan . asRadians
 
-asin' :: (Floating a, AngularUnit t) => a -> Angle t a
+asin' :: (Floating a) => a -> Angle t a
 asin' = Angle . asin
 
-acos' :: (Floating a, AngularUnit t) => a -> Angle t a
+acos' :: (Floating a) => a -> Angle t a
 acos' = Angle . acos
 
-atan' :: (Floating a, AngularUnit t) => a -> Angle t a
+atan' :: (Floating a) => a -> Angle t a
 atan' = Angle . atan
 
 
@@ -63,7 +81,7 @@ class AngularUnit t where
   angularUnit :: Floating a => p t -> a
 
 instance AngularUnit Radians  where angularUnit _ = 1
-instance AngularUnit Degrees  where angularUnit _ = 180 / pi 
+instance AngularUnit Degrees  where angularUnit _ = 180 / pi
 instance AngularUnit Minutes  where angularUnit _ = 60 * 180 / pi
 instance AngularUnit Seconds  where angularUnit _ = 60 * 60 * 180 / pi
 instance AngularUnit HourRA   where angularUnit _ = 12 / pi
