@@ -260,3 +260,15 @@ type instance F.Dim ProjCoord = F.N2
 instance Unbox F.N2 a => F.Vector ProjCoord a where
   inspect  (ProjCoord v) = F.inspect v
   construct = ProjCoord `fmap` F.construct
+
+-- | Shift and uniform scale scale transformation
+data ShiftAndScale a = ShiftAndScale !a !(Vec2 a)
+
+invertShiftAndScale :: (Unbox F.N2 a) => ShiftAndScale a -> ShiftAndScale a
+invertShiftAndScale (ShiftAndScale s p0) =
+  undefined
+
+instance Unbox F.N2 a => Monoid (ShiftAndScale a) where
+  mempty = ShiftAndScale 1 (F.mk2 0 0)
+  ShiftAndScale s1 p1 `mappend` ShiftAndScale s2 p2
+    = ShiftAndScale (s1 * s2) 
