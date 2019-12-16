@@ -63,14 +63,11 @@ gnomonic = Projection
   , maxR      = Nothing
   }
 
+-- | Azimuthal equidistant projection
 azimuthalEquidistant :: Projection Double
 azimuthalEquidistant = Projection
   { project = \(Spherical v) -> case F.convert v of
-      (x,y,z) | z < 0 -> case negate z of
-                           0  -> Just $ ProjCoord $ F.mk2 0 0
-                           z' -> Just $ ProjCoord $ F.mk2 (x * sc) (y * sc)
-                             where
-                               sc = acos z' / sqrt (x*x + y*y)
+      (x,y,z) | z < 0     -> Just $ F.convert $ scaleTo (acos (negate z)) (x,y)
               | otherwise -> Nothing
   , unproject = \(F.convert -> (x,y)) -> do
        let θ = sqrt $ x*x + y*y
@@ -82,10 +79,30 @@ azimuthalEquidistant = Projection
   , maxR      = Just (pi/2)
   }
 
+-- | Lambert's azimuthal equal area projection
+azimuthalEqualArea :: Projection Double
+azimuthalEqualArea = Projection
+  { project = \(Spherical v) -> case F.convert v of
+      (x,y,z) ->
+        let r  = 2 * sqrt ((1 + z) / 2) -- Radius of projection point
+        in Just $ F.convert $ scaleTo r (x,y)
+  , unproject = undefined
+  , maxR = Just 2
+  }
+
+----------------------------------------------------------------
+-- Helpers
+----------------------------------------------------------------
+
+-- | Scale 2D point to given radius
+scaleTo :: Double -> (Double,Double) -> (Double,Double)
+scaleTo _ (0,0) = (0,0)
+scaleTo r (x,y) = (x*s, y*s)
+  where
+    r0 = sqrt $ x*x + y*y
+    s  = r/r0
+
+-- | Safe sin(x)/x
 sinc :: Double -> Double
 sinc 0 = 1
 sinc x = sin x / x
-
--- Projections to be supported:
---   + Lambert-azimuthal equal area
---   + Equirectangular
